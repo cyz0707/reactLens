@@ -1,0 +1,45 @@
+# Uploads
+uploads/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Flask/instance/config
+instance/
+.env
+.env.*
+
+# Databases
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+
+# Node/Frontend
+node_modules/
+ui_events_admin/node_modules/
+ui_events_display/node_modules/
+yarn.lock
+package-lock.json
+build/
+dist/
+
+# Editor/IDE
+.vscode/
+.idea/
+*.iml
+server/scripts/seed_nz_events.py
