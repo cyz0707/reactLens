@@ -1,122 +1,114 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { analyseRepo } from './api'
+import type { AnalyseResponse, ComponentDebt } from './types'
+import { SearchBar } from './components/SearchBar'
+import { StatsCards } from './components/StatsCards'
+import { DebtTreemap } from './components/DebtTreemap'
+import { FileList } from './components/FileList'
+import { FileDetail } from './components/FileDetail'
+import { AIPanel } from './components/AIPanel'
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [loading, setLoading]   = useState(false)
+  const [error, setError]       = useState<string | null>(null)
+  const [result, setResult]     = useState<AnalyseResponse | null>(null)
+  const [selected, setSelected] = useState<ComponentDebt | null>(null)
+
+  const handleSubmit = async (url: string) => {
+    setLoading(true)
+    setError(null)
+    setResult(null)
+    setSelected(null)
+    try {
+      const data = await analyseRepo(url)
+      setResult(data)
+    } catch (e: any) {
+      setError(e.message || 'Something went wrong')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div className="min-h-screen bg-bg text-white">
+      <header className="border-b border-border">
+        <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center">
+              <span className="text-accent font-mono text-sm font-bold">R</span>
+            </div>
+            <div>
+              <h1 className="font-sans font-semibold text-white text-base leading-none">ReactLens</h1>
+              <p className="text-muted text-xs mt-0.5">Technical Debt Analyser</p>
+            </div>
+          </div>
+          {result && <span className="font-mono text-xs text-muted">{result.repo_name}</span>}
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+      </header>
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+      <main className="max-w-7xl mx-auto px-6 py-8 space-y-6">
+        <div className="flex flex-col items-center gap-3">
+          <SearchBar onSubmit={handleSubmit} loading={loading} />
+          <p className="text-muted text-xs font-sans">Enter any public GitHub repository URL</p>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+        {error && (
+          <div className="card p-4 border-red-500/30 bg-red-500/10 animate-fade-in">
+            <p className="text-red-400 text-sm font-sans">⚠ {error}</p>
+          </div>
+        )}
+
+        {loading && (
+          <div className="space-y-4 animate-pulse">
+            <div className="grid grid-cols-4 gap-3">
+              {[...Array(4)].map((_, i) => <div key={i} className="card h-20 bg-surface/50" />)}
+            </div>
+            <div className="card h-96 bg-surface/50" />
+          </div>
+        )}
+
+        {result && !loading && (
+          <div className="space-y-6 animate-fade-in">
+            <StatsCards data={result} />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 space-y-4">
+                <DebtTreemap components={result.components} onSelect={setSelected} />
+                <AIPanel data={result} />
+              </div>
+              <div className="space-y-4">
+                {selected && <FileDetail component={selected} onClose={() => setSelected(null)} />}
+                <FileList components={result.components} selected={selected} onSelect={setSelected} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {!result && !loading && !error && (
+          <div className="flex flex-col items-center justify-center py-24 gap-4">
+            <div className="w-16 h-16 rounded-2xl bg-surface border border-border flex items-center justify-center">
+              <span className="text-3xl">🔍</span>
+            </div>
+            <div className="text-center">
+              <p className="text-white font-sans font-medium">Analyse a React repository</p>
+              <p className="text-muted text-sm mt-1">Enter a GitHub URL above to visualise technical debt</p>
+            </div>
+            <div className="flex flex-wrap gap-2 justify-center mt-2">
+              {[
+                'https://github.com/typescript-rtti/typescript-rtti',
+                'https://github.com/miladr0/task-do',
+              ].map(url => (
+                <button
+                  key={url}
+                  onClick={() => handleSubmit(url)}
+                  className="text-xs font-mono text-accent hover:text-indigo-300 transition-colors bg-accent/10 px-3 py-1.5 rounded-lg border border-accent/20"
+                >
+                  {url.replace('https://github.com/', '')}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
   )
 }
-
-export default App
